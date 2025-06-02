@@ -2,12 +2,11 @@
   <div id="app">
     <div class="wrapper">
       <div class="item">
-        <div class="theme-toggle" title="Toggle Light/Dark Mode">
-          <input type="checkbox" id="theme-toggle" v-model="isDarkMode" @change="toggleTheme">
-          <label for="theme-toggle" class="toggle-label">
+        <div class="theme-toggle" @click="toggleTheme" title="Toggle Light/Dark Mode">
+          <div class="toggle-label" :class="{ 'checked': isDarkMode }">
             <span class="toggle-inner"></span>
             <span class="toggle-switch"></span>
-          </label>
+          </div>
         </div>
         <div class="icon"></div>
       </div>
@@ -60,6 +59,19 @@
                   @error="handleImageError($event)"
                   loading="lazy"
               />
+
+              <!-- Favorite button -->
+              <button
+                  class="favorite-btn"
+                  @click.stop="toggleFavorite(image)"
+                  :class="{ 'favorited': isFavorited(image.id) }"
+                  title="Add to favorites"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                </svg>
+              </button>
+
               <div class="image-overlay">
                 <p class="image-title">{{ image.title }}</p>
               </div>
@@ -75,17 +87,37 @@
           </div>
         </div>
       </div>
-      <div class="item">
-        <h2>Recent</h2>
-        <div class="list-wrapper">
-          <ul id="search-list">
-            <li v-for="(term, index) in recentSearches" :key="index" @click="searchFromRecent(term)">
-              {{ term }}
-            </li>
-          </ul>
+      <div class="hold">
+        <div class="item">
+          <h2>Favorites</h2>
+          <button v-if="favoriteImages.length > 0" @click="clearFavorites" class="clear-btn">Clear</button>
+        <div class="favorites-grid" v-if="favoriteImages.length > 0">
+          <div
+              v-for="favorite in favoriteImages.slice(0, 6)"
+              :key="favorite.id"
+              class="favorite-item"
+              @click="openImageModal(favorite)"
+          >
+            <img :src="favorite.thumbnail" :alt="favorite.title" />
+          </div>
+        </div>
+          <p v-else class="no-favorites">No favorite images yet</p>
+        </div>
+
+        <div class="item">
+          <h2>Recent</h2>
+          <button v-if="recentSearches.length > 0" @click="clearRecentSearches" class="clear-btn">Clear</button>
+
+          <div class="list-wrapper">
+            <ul id="search-list">
+              <li v-for="(term, index) in recentSearches" :key="index" @click="searchFromRecent(term)">
+                {{ term }}
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
-    </div>
+  </div>
 
 
 
@@ -104,7 +136,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 
 // Theme state
 const isDarkMode = ref(false);
@@ -118,6 +150,9 @@ const errorMessage = ref('');
 const currentSearchTerm = ref('');
 const selectedImage = ref(null);
 const currentPage = ref(1);
+const favoriteImages = ref([]); // New: Add favorites functionality
+const searchHistory = ref([]); // New: Detailed search history with timestamps
+
 
 const MAX_RECENT_ITEMS = 30;
 
@@ -125,23 +160,71 @@ const MAX_RECENT_ITEMS = 30;
 const UNSPLASH_API_KEY = 'lGUS1kvWMuYXcYP1h9WmXiiSLwJ1qo39aKfuLPQQrIc'; // Replace with your actual API key
 const UNSPLASH_BASE_URL = 'https://api.unsplash.com';
 
+// Storage keys
+const STORAGE_KEYS = {
+  RECENT_SEARCHES: 'imageSearch_recentSearches',
+  DARK_MODE: 'imageSearch_darkMode',
+  FAVORITE_IMAGES: 'imageSearch_favoriteImages',
+  SEARCH_HISTORY: 'imageSearch_searchHistory'
+};
 
-// Apply theme on mounted
-onMounted(() => {
-  if (localStorage.getItem('darkMode') === 'true' ||
-      (!('darkMode' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-    enableDarkMode();
-    isDarkMode.value = true;
+
+// Helper functions for localStorage
+function saveToStorage(key, data) {
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch (error) {
+    console.error('Error saving to localStorage:', error);
   }
+}
+
+function loadFromStorage(key, defaultValue = null) {
+  try {
+    const item = localStorage.getItem(key);
+    return item ? JSON.parse(item) : defaultValue;
+  } catch (error) {
+    console.error('Error loading from localStorage:', error);
+    return defaultValue;
+  }
+}
+
+// Load data on app mount
+onMounted(() => {
+  // Load recent searches
+  const savedSearches = loadFromStorage(STORAGE_KEYS.RECENT_SEARCHES, []);
+  recentSearches.value = savedSearches;
+
+  // Load theme preference
+  const savedDarkMode = loadFromStorage(STORAGE_KEYS.DARK_MODE, false);
+  isDarkMode.value = savedDarkMode;
+
+  // Apply theme immediately
+  if (savedDarkMode) {
+    enableDarkMode();
+  } else {
+    enableLightMode();
+  }
+
+  // Load favorite images
+  const savedFavorites = loadFromStorage(STORAGE_KEYS.FAVORITE_IMAGES, []);
+  favoriteImages.value = savedFavorites;
+
+  // Load search history
+  const savedHistory = loadFromStorage(STORAGE_KEYS.SEARCH_HISTORY, []);
+  searchHistory.value = savedHistory;
 });
 
-// Toggle theme function
+// Enhanced toggle theme function
 function toggleTheme() {
+  isDarkMode.value = !isDarkMode.value;
+
   if (isDarkMode.value) {
     enableDarkMode();
   } else {
     enableLightMode();
   }
+
+  // localStorage is automatically saved via watcher
 }
 
 // Enable dark mode
@@ -156,22 +239,125 @@ function enableLightMode() {
   localStorage.setItem('darkMode', 'false');
 }
 
+// Watch for changes and auto-save to localStorage
+watch(recentSearches, (newSearches) => {
+  saveToStorage(STORAGE_KEYS.RECENT_SEARCHES, newSearches);
+}, { deep: true });
 
+watch(isDarkMode, (newMode) => {
+  saveToStorage(STORAGE_KEYS.DARK_MODE, newMode);
+});
 
-// Function to add a new search term to the list
+watch(favoriteImages, (newFavorites) => {
+  saveToStorage(STORAGE_KEYS.FAVORITE_IMAGES, newFavorites);
+}, { deep: true });
+
+watch(searchHistory, (newHistory) => {
+  saveToStorage(STORAGE_KEYS.SEARCH_HISTORY, newHistory);
+}, { deep: true });
+
+// Enhanced addRecentSearch function
 function addRecentSearch(term) {
   if (!term.trim()) return;
 
+  // Remove if already exists
   const existingIndex = recentSearches.value.indexOf(term);
   if (existingIndex !== -1) {
     recentSearches.value.splice(existingIndex, 1);
   }
 
+  // Add to beginning
   recentSearches.value.unshift(term);
 
+  // Limit to MAX_RECENT_ITEMS
   if (recentSearches.value.length > MAX_RECENT_ITEMS) {
     recentSearches.value.pop();
   }
+
+  // Add to detailed search history
+  addToSearchHistory(term);
+}
+
+
+// New: Add to search history with timestamp
+function addToSearchHistory(term) {
+  const historyItem = {
+    term: term,
+    timestamp: new Date().toISOString(),
+    count: 1
+  };
+
+  // Check if term already exists in history
+  const existingIndex = searchHistory.value.findIndex(item => item.term === term);
+
+  if (existingIndex !== -1) {
+    // Increment count and update timestamp
+    searchHistory.value[existingIndex].count++;
+    searchHistory.value[existingIndex].timestamp = historyItem.timestamp;
+  } else {
+    // Add new entry
+    searchHistory.value.unshift(historyItem);
+  }
+
+  // Keep only last 100 searches
+  if (searchHistory.value.length > 100) {
+    searchHistory.value = searchHistory.value.slice(0, 100);
+  }
+}
+
+// New: Favorite image functionality
+function toggleFavorite(image) {
+  const existingIndex = favoriteImages.value.findIndex(fav => fav.id === image.id);
+
+  if (existingIndex !== -1) {
+    // Remove from favorites
+    favoriteImages.value.splice(existingIndex, 1);
+  } else {
+    // Add to favorites
+    const favoriteImage = {
+      ...image,
+      favoritedAt: new Date().toISOString()
+    };
+    favoriteImages.value.unshift(favoriteImage);
+  }
+}
+
+// New: Check if image is favorited
+function isFavorited(imageId) {
+  return favoriteImages.value.some(fav => fav.id === imageId);
+}
+
+// New: Clear storage functions
+function clearRecentSearches() {
+  recentSearches.value = [];
+}
+
+
+function clearSearchHistory() {
+  searchHistory.value = [];
+}
+
+function clearFavorites() {
+  favoriteImages.value = [];
+}
+
+// New: Export data function (bonus feature)
+function exportUserData() {
+  const userData = {
+    recentSearches: recentSearches.value,
+    favoriteImages: favoriteImages.value,
+    searchHistory: searchHistory.value,
+    darkMode: isDarkMode.value,
+    exportedAt: new Date().toISOString()
+  };
+
+  const dataStr = JSON.stringify(userData, null, 2);
+  const dataBlob = new Blob([dataStr], { type: 'application/json' });
+
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(dataBlob);
+  link.download = 'image-search-data.json';
+  link.click();
 }
 
 // Search for images using Unsplash API
@@ -241,7 +427,8 @@ function generateMockImages(query, page) {
   return mockImages;
 }
 
-// Handle search button click
+
+// Modified handleSearch function to include history tracking
 async function handleSearch() {
   const query = searchQuery.value.trim();
   if (!query || isLoading.value) return;
@@ -254,7 +441,7 @@ async function handleSearch() {
   try {
     const result = await searchImages(query, 1);
     searchResults.value = result.results;
-    addRecentSearch(query);
+    addRecentSearch(query); // This now automatically saves to localStorage
     searchQuery.value = '';
   } catch (error) {
     errorMessage.value = 'Failed to search images. Please try again.';
@@ -322,6 +509,7 @@ function closeImageModal() {
 
 .wrapper {
   display: flex;
+
   gap: 13px;
   width: 100%;
   height: 100%;
@@ -369,12 +557,11 @@ function closeImageModal() {
 }
 
 .wrapper > div:nth-child(3) {
-  flex: 0 0 30vh;
-  display: flex;
-  justify-content: start;
-  flex-direction: column;
-  align-items: start;
-  padding: 30px;
+
+  gap: 12px;
+  flex: 0 0 30vw;
+
+
 }
 
 .item {
@@ -477,6 +664,7 @@ function closeImageModal() {
 }
 
 .item h2 {
+  padding-left: 20px;
   color: var(--text-color);
   padding-bottom: 1px;
   border-bottom: 1px solid var(--border-line);
@@ -491,9 +679,9 @@ function closeImageModal() {
 
 #search-list {
   list-style-type: none;
-  padding: 0;
+  padding-top: 10px;
   margin: 0;
-  width: 100%;
+  padding-left: 0;
   display: flex;
   justify-content: start;
   flex-direction: column;
@@ -505,7 +693,7 @@ function closeImageModal() {
 #search-list li {
   color: var(--text-color);
   border-bottom: 1px solid var(--border-line);
-  padding: 10px 10px;
+  padding: 10px;
   align-items: start;
 
 
@@ -733,6 +921,7 @@ function closeImageModal() {
   justify-content: center;
   background-color: transparent;
   cursor: pointer;
+
 }
 
 /* Hide default checkbox */
@@ -741,6 +930,7 @@ function closeImageModal() {
   position: absolute;
   width: 0;
   height: 0;
+
 }
 
 .toggle-label {
@@ -751,6 +941,7 @@ function closeImageModal() {
   border-radius: 10px;
   display: inline-block;
   transition: background 0.3s ease;
+  cursor: pointer;
 }
 
 .toggle-inner {
@@ -771,15 +962,226 @@ function closeImageModal() {
   bottom: 2px;
   background-color: var(--dot-color);
   border-radius: 50%;
-  transition: 0.4s;
+  transition: all 0.4s ease;
 }
 
-#theme-toggle:checked + .toggle-label .toggle-switch {
+/* Animate when dark mode is active */
+.toggle-label.checked .toggle-switch {
   transform: translateX(20px);
 }
 
-#theme-toggle:checked + .toggle-label .toggle-inner {
-  background: var(--toggle-color);
+.toggle-label.checked .toggle-inner {
+  background: var(--toggle-color); /* Optional: change background color in dark mode */
+}
+
+
+
+/* Favorite button on images */
+.favorite-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0, 0, 0, 0.7);
+  border: none;
+  border-radius: 50%;
+  width: 35px;
+  height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 10;
+}
+
+.favorite-btn svg {
+  color: #fff;
+  transition: all 0.3s ease;
+}
+
+.favorite-btn:hover {
+  background: rgba(0, 0, 0, 0.9);
+  transform: scale(1.1);
+}
+
+.favorite-btn.favorited svg {
+  fill: #e74c3c;
+  color: #e74c3c;
+}
+
+.favorite-btn.favorited {
+  background: rgba(231, 76, 60, 0.2);
+}
+
+/* Section headers with clear buttons */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--border-line);
+}
+
+.section-header h2,
+.section-header h3 {
+  margin: 0;
+  color: var(--text-color);
+}
+
+.clear-btn {
+  background: none;
+  border: 1px solid var(--border-line);
+  color: var(--text-color);
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.3s ease;
+}
+
+.clear-btn:hover {
+  background: var(--hover-bg);
+  border-color: var(--icon-color);
+}
+
+/* Favorites section */
+.favorites-section {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.favorites-grid {
+
+
+  flex: 1 1 auto;
+  overflow-y: auto;
+  height: 100%;
+
+
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-top: 10px;
+  padding: 10px;
+}
+
+.favorite-item {
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.favorite-item:hover {
+  transform: scale(1.05);
+}
+
+.favorite-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.no-favorites {
+  text-align: center;
+  color: var(--input-placeholder);
+  font-style: italic;
+  margin: 20px 0;
+}
+
+/* Settings section */
+.settings-section {
+  padding: 15px;
+}
+
+.settings-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.export-btn {
+  background: var(--button-primary);
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.3s ease;
+}
+
+.export-btn:hover {
+  background: var(--button-primary-hover);
+}
+
+/* Update image item to accommodate favorite button */
+.image-item {
+  position: relative;
+  overflow: hidden;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .favorites-grid {
+
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .favorite-btn {
+    width: 30px;
+    height: 30px;
+  }
+
+  .favorite-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+/* Dark mode adjustments for new elements */
+.dark-mode .favorite-btn {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.dark-mode .favorite-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.dark-mode .no-favorites {
+  color: var(--input-placeholder);
+}
+.hold{
+  max-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-content: stretch;
+
+  align-items: stretch;
+
+}
+.hold > div:nth-child(1){
+  max-height: 50vh;
+  flex: 0 30vw;
+  justify-content: start;
+  padding: 20px;
+}
+.hold > div:nth-child(2){
+  display: flex;
+  flex: 1;
+  height: max-content;
+  padding: 20px;
+
+
+
 }
 
 </style>
