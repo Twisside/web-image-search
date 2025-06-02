@@ -2,6 +2,13 @@
   <div id="app">
     <div class="wrapper">
       <div class="item">
+        <div class="theme-toggle" title="Toggle Light/Dark Mode">
+          <input type="checkbox" id="theme-toggle" v-model="isDarkMode" @change="toggleTheme">
+          <label for="theme-toggle" class="toggle-label">
+            <span class="toggle-inner"></span>
+            <span class="toggle-switch"></span>
+          </label>
+        </div>
         <div class="icon"></div>
       </div>
       <div class="item search-container" :class="{ 'has-results': searchResults.length > 0 || isLoading || errorMessage }">
@@ -97,8 +104,10 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 
+// Theme state
+const isDarkMode = ref(false);
 // Reactive state
 const searchQuery = ref('');
 const recentSearches = ref([]);
@@ -115,6 +124,39 @@ const MAX_RECENT_ITEMS = 30;
 // Unsplash API configuration
 const UNSPLASH_API_KEY = 'lGUS1kvWMuYXcYP1h9WmXiiSLwJ1qo39aKfuLPQQrIc'; // Replace with your actual API key
 const UNSPLASH_BASE_URL = 'https://api.unsplash.com';
+
+
+// Apply theme on mounted
+onMounted(() => {
+  if (localStorage.getItem('darkMode') === 'true' ||
+      (!('darkMode' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    enableDarkMode();
+    isDarkMode.value = true;
+  }
+});
+
+// Toggle theme function
+function toggleTheme() {
+  if (isDarkMode.value) {
+    enableDarkMode();
+  } else {
+    enableLightMode();
+  }
+}
+
+// Enable dark mode
+function enableDarkMode() {
+  document.documentElement.classList.add('dark-mode');
+  localStorage.setItem('darkMode', 'true');
+}
+
+// Enable light mode
+function enableLightMode() {
+  document.documentElement.classList.remove('dark-mode');
+  localStorage.setItem('darkMode', 'false');
+}
+
+
 
 // Function to add a new search term to the list
 function addRecentSearch(term) {
@@ -275,7 +317,7 @@ function closeImageModal() {
   height: calc(100vh - 20px);
   font-family: Arial, sans-serif;
   padding: 10px;
-  background: linear-gradient(135deg, #1e1e1e 0%, #2a2a2a 100%);
+  background: var(--bg-app-gradient-end);
 }
 
 .wrapper {
@@ -287,30 +329,31 @@ function closeImageModal() {
 
 .wrapper > div:nth-child(1) {
   flex: 0 0 40px;
+  padding: 10px;
+  gap: 10px;
+
 }
 
 .wrapper > div:nth-child(2) {
   flex: 1;
   flex-direction: column;
-  background-color: rgba(10, 10, 10, 0.40);
-  box-shadow: inset 0 0 25px 7px rgba(0, 0, 0, 0.25),
-  0 0 20px 0 rgba(198, 198, 198, 0.31),
-  0 4px 4px 0 rgba(0, 0, 0, 0.25);
+  background-color: var(--bg-main-panel);
+  box-shadow: var(--shadow-main);
 
   justify-content: center;
   align-items: center;
   overflow-y: auto;
-  padding:15px;
+
 
 }
 
 .results-content {
   border-radius: 10px;
-  margin-top: 10px;
-  width: 100%;
+  width: 92%;
   flex: 1;
   overflow-y: auto;
-
+  padding: 15px;
+  margin-top: 10px;
 }
 
 .results-content .results-header {
@@ -320,7 +363,7 @@ function closeImageModal() {
 }
 
 .results-content .results-header h3 {
-  color: #fff;
+  color: var(--text-color);
   margin: 0;
   font-size: 18px;
 }
@@ -336,15 +379,14 @@ function closeImageModal() {
 
 .item {
   display: flex;
-  justify-content: center;
-  align-items: end;
+  justify-content: end;
+  flex-direction: column;
   position: relative;
-  padding: 10px;
-  border: 1px solid lightgray;
+  padding-top: 20px;
+  border: 1px solid var(--border-color);
   border-radius: 15px;
-  background-color: rgba(10, 10, 10, 0.5);
-  box-shadow: 0 0 20px 0 rgba(198, 198, 198, 0.31),
-  inset 0 0 20px 0 rgba(0, 0, 0, 0.25);
+  background-color: var(--bg-items);
+  box-shadow: var(--item-shadow);
 }
 
 .icon {
@@ -353,18 +395,18 @@ function closeImageModal() {
   padding: 3px;
   background-color: lightgray;
   border-radius: 50%;
-  position: absolute;
+
 }
 
 .search-bar {
   display: flex;
   align-items: center;
-  background-color: rgba(161, 161, 161, 0.03);
-  border: 1px solid #444;
+  background-color: var(--search-bar-bg);
+  border: 1px solid var(--search-bar-border);
   border-radius: 20px;
   overflow: hidden;
-  box-shadow: 5px 9px 26px 1px rgba(0, 0, 0, 0.2);
-  padding-right: 8px;
+  box-shadow: var(--shadow-search);
+  padding-right: 6px;
 }
 
 .search-bar input[type="text"] {
@@ -373,12 +415,13 @@ function closeImageModal() {
   border: none;
   outline: none;
   background-color: transparent;
-  color: #ccc;
+  color: var(--input-text);
   font-size: 16px;
+
 }
 
 .search-bar input[type="text"]::placeholder {
-  color: #999;
+  color: var(--input-placeholder);
 }
 
 .search-bar button {
@@ -399,7 +442,7 @@ function closeImageModal() {
 }
 
 .search-bar button svg {
-  color: #aaa;
+  color: var(--icon-color);
   width: 18px;
   height: 18px;
   transition: color 0.3s ease;
@@ -409,15 +452,15 @@ function closeImageModal() {
 }
 
 .search-bar button:hover:not(:disabled) svg {
-  border: 1px solid rgba(168, 168, 168, 0.9);
-  color: #ddd;
+  border: 1px solid var(--icon-border-hover);
+  color: var(--icon-hover)
 }
 
 .loading-spinner {
   width: 16px;
   height: 16px;
-  border: 2px solid rgba(168, 168, 168, 0.3);
-  border-top: 2px solid #aaa;
+  border: 2px solid var(--spinner-border);
+  border-top: 2px solid var(--spinner-top);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -434,9 +477,9 @@ function closeImageModal() {
 }
 
 .item h2 {
-  color: #fff;
+  color: var(--text-color);
   padding-bottom: 1px;
-  border-bottom: 1px solid rgba(168, 168, 168, 0.4);
+  border-bottom: 1px solid var(--border-line);
 }
 
 .list-wrapper {
@@ -460,10 +503,10 @@ function closeImageModal() {
 }
 
 #search-list li {
-  color: #fff;
+  color: var(--text-color);
+  border-bottom: 1px solid var(--border-line);
   padding: 10px 10px;
   align-items: start;
-  border-bottom: 1px solid rgba(168, 168, 168, 0.4);
 
 
   white-space: nowrap;
@@ -475,7 +518,7 @@ function closeImageModal() {
 }
 
 #search-list li:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: var(--hover-bg);
 }
 
 #search-list li:last-child {
@@ -498,29 +541,9 @@ function closeImageModal() {
 
 
 /* Results Section */
-.results-section {
-  margin-top: 20px;
-  padding: 20px;
-  background-color: rgba(0, 0, 0, 0.3);
-  border-radius: 15px;
-  border: 1px solid rgba(168, 168, 168, 0.3);
-}
 
 .results-header h3 {
-  color: #fff;
-  margin-bottom: 20px;
-  text-align: center;
-}
-.results-section {
-  margin-top: 20px;
-  padding: 20px;
-  background-color: rgba(0, 0, 0, 0.3);
-  border-radius: 15px;
-  border: 1px solid rgba(168, 168, 168, 0.3);
-}
-
-.results-header h3 {
-  color: #fff;
+  color: var(--text-color);
   margin-bottom: 20px;
   text-align: center;
 }
@@ -544,7 +567,7 @@ function closeImageModal() {
 .retry-button {
   margin-top: 10px;
   padding: 8px 16px;
-  background-color: #007bff;
+  background-color: var(--button-primary);
   color: white;
   border: none;
   border-radius: 5px;
@@ -553,7 +576,7 @@ function closeImageModal() {
 }
 
 .retry-button:hover {
-  background-color: #0056b3;
+  background-color: var(--button-primary-hover);
 }
 
 .image-grid {
@@ -613,7 +636,7 @@ function closeImageModal() {
 
 .load-more-button {
   padding: 10px 20px;
-  background-color: #007bff;
+  background-color: var(--button-primary);
   color: white;
   border: none;
   border-radius: 5px;
@@ -622,7 +645,7 @@ function closeImageModal() {
 }
 
 .load-more-button:hover:not(:disabled) {
-  background-color: #0056b3;
+  background-color: var(--button-primary-hover);
 }
 
 .load-more-button:disabled {
@@ -648,7 +671,7 @@ function closeImageModal() {
   position: relative;
   max-width: 90%;
   max-height: 90%;
-  background-color: #2a2a2a;
+  background-color: var(--modal-bg);
   border-radius: 10px;
   overflow: hidden;
 }
@@ -696,11 +719,68 @@ function closeImageModal() {
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: rgba(100, 100, 100, 0.5);
+  background-color: var(--scrollbar-thumb);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(200, 200, 200, 0.8);
+  background-color: var(--scrollbar-thumb-hover);
 }
+
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  cursor: pointer;
+}
+
+/* Hide default checkbox */
+#theme-toggle {
+  opacity: 0;
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+.toggle-label {
+  position: relative;
+  width: 40px;
+  height: 20px;
+  background: var(--toggle-color);
+  border-radius: 10px;
+  display: inline-block;
+  transition: background 0.3s ease;
+}
+
+.toggle-inner {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 10px;
+  background: var(--toggle-color);
+  transition: 0.4s;
+}
+
+.toggle-switch {
+  position: absolute;
+  content: '';
+  height: 16px;
+  width: 16px;
+  left: 2px;
+  bottom: 2px;
+  background-color: var(--dot-color);
+  border-radius: 50%;
+  transition: 0.4s;
+}
+
+#theme-toggle:checked + .toggle-label .toggle-switch {
+  transform: translateX(20px);
+}
+
+#theme-toggle:checked + .toggle-label .toggle-inner {
+  background: var(--toggle-color);
+}
+
 </style>
+
