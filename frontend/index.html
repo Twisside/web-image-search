@@ -1,0 +1,41 @@
+<!--<!DOCTYPE html>-->
+<!--<html lang="">-->
+<!--  <head>-->
+<!--    <meta charset="UTF-8">-->
+<!--    <link rel="icon" href="/favicon.ico">-->
+<!--    <link rel="stylesheet" href="./src/assets/main.css">-->
+<!--    <meta name="viewport" content="width=device-width, initial-scale=1.0">-->
+<!--    <title>Vite App</title>-->
+<!--  </head>-->
+<!--  <body>-->
+
+<!--    <div class="grad"></div>-->
+<!--    <div class="svgs"></div>-->
+<!--    <div id="app"></div>-->
+
+<!--    <script type="module" src="/src/main.js"></script>-->
+<!--    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>-->
+<!--  </body>-->
+<!--</html>-->
+
+<!DOCTYPE html>
+<html lang="">
+  <head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="/favicon.ico">
+    <!-- main.css is imported via main.js, so this link might be redundant or for non-JS contexts -->
+    <!-- <link rel="stylesheet" href="./src/assets/main.css"> -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vite App</title>
+  </head>
+  <body marginheight="0" marginwidth="0">
+    <!-- grad and svgs divs are now part of App.vue for better component encapsulation if they are dynamic -->
+    <!-- If they are static backgrounds, they can remain here or be styled on body/html directly -->
+    <!-- For this structure, assuming they are part of the overall app layout controlled by Vue -->
+    <div id="app"></div>
+
+    <script type="module" src="/src/main.js"></script>
+    <!-- Bootstrap JS if still needed globally, often components manage their own JS dependencies or use Vue-Bootstrap libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>
