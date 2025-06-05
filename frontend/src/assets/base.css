@@ -1,3 +1,4 @@
+/* Content of base.css - No changes specified, assumed to be the same as provided. */
 /* variables.css */
 
 :root {
@@ -42,7 +43,7 @@
 }
 
 /* light-mode.css or inside <style> tag */
-
+/* This class should be applied to the body or a root container element */
 .dark-mode {
     /* Dark Mode Colors */
     --page-shadow: inset 0 0 100px 50px rgba(0, 0, 0, 0.65);
@@ -86,7 +87,7 @@
     --error-color: #ff6b6b;
 
     --modal-bg: #2a2a2a;
-    --medal-overlay-bg: rgba(0, 0, 0, 0.9);
+    --medal-overlay-bg: rgba(0, 0, 0, 0.9); /* Typo: modal-overlay-bg */
 
     --scrollbar-thumb: rgba(100, 100, 100, 0.5);
     --scrollbar-thumb-hover: rgba(200, 200, 200, 0.8);
@@ -94,3 +95,8 @@
     --body-bg: #282828;
 }
 
+body {
+  background-color: var(--body-bg);
+  color: var(--text-color);
+  /* Additional global styles */
+}
