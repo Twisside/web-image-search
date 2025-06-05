@@ -244,19 +244,7 @@ Visit http://localhost:4000/api-docs when the server is running to explore the i
 - Use browser DevTools to inspect API calls
 - Check backend console for detailed error messages
 - Monitor network requests for authentication issues
-- Use MongoDB Compass for database inspection
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+- Use MongoDB Compass for inspections.
 
 ## Acknowledgments
 
