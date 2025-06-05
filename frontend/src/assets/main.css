@@ -1,0 +1,35 @@
+/* Content of main.css - No changes specified, assumed to be the same as provided. */
+@import './base.css';
+
+body {
+    margin: 0;
+    padding: 0;
+    /* background-color: #282828; /* This will be controlled by --body-bg from base.css */
+    background-color: var(--body-bg); /* Use CSS variable */
+}
+
+.svgs {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    z-index: -2; /* Ensure it's behind content */
+    top: -0.5px;
+    left: -0.5px;
+    background-image: url('./Group 3.svg'); /* Ensure Group 3.svg is in assets */
+    background-size: 100% 100%;
+}
+
+.grad {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    z-index: -1; /* Ensure it's behind content but above svgs if needed */
+    top: -0.5px;
+    left: -0.5px;
+    box-shadow: var(--page-shadow);
+}
+
+/* Commented out #app styles as they are very specific and might conflict with router views */
+/* It's generally better to style components or views directly */
+
+/* Ensure Group 3.svg is present in src/assets/ */
