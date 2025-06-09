@@ -1,4 +1,5 @@
 ﻿<template>
+
   <div class="login-container">
     <h2>Login or Register</h2>
     <form @submit.prevent="handleLogin" v-if="!showRegisterForm">
@@ -36,6 +37,7 @@
       {{ showRegisterForm ? 'Switch to Login' : 'Switch to Register' }}
     </button>
   </div>
+
 </template>
 
 <script setup>
@@ -97,6 +99,7 @@ const toggleFormType = () => {
 
 <style scoped>
 .login-container {
+  z-index: 1000;
   max-width: 400px;
   margin: 50px auto;
   padding: 20px;
