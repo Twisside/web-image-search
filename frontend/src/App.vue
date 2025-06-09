@@ -1,7 +1,7 @@
 <template>
+
   <div id="main-app-wrapper" :class="{ 'dark-mode': isDarkModeActive }">
-    <div class="grad"></div>
-    <div class="svgs"></div>
+
     <router-view />
   </div>
 </template>

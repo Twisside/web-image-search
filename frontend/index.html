@@ -28,11 +28,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vite App</title>
   </head>
+  <style>
+      .svgs {
+          width: 100%;
+          height: 100%;
+          position: absolute;
+          z-index: 0; /* Ensure it's behind content */
+          top: -0.5px;
+          left: -0.5px;
+          background-image: url('./src/assets/Group 3.svg'); /* Ensure Group 3.svg is in assets */
+          background-size: 100% 100%;
+      }
+
+      .grad {
+          width: 100%;
+          height: 100%;
+          position: absolute;
+          z-index: 0; /* Ensure it's behind content but above svgs if needed */
+          top: -0.5px;
+          left: -0.5px;
+          box-shadow: var(--page-shadow);
+      }
+  </style>
   <body marginheight="0" marginwidth="0">
     <!-- grad and svgs divs are now part of App.vue for better component encapsulation if they are dynamic -->
     <!-- If they are static backgrounds, they can remain here or be styled on body/html directly -->
     <!-- For this structure, assuming they are part of the overall app layout controlled by Vue -->
+
     <div id="app"></div>
+
+
 
     <script type="module" src="/src/main.js"></script>
     <!-- Bootstrap JS if still needed globally, often components manage their own JS dependencies or use Vue-Bootstrap libraries -->
