@@ -1,4 +1,6 @@
 ﻿<template>
+  <div class="grad"></div>
+  <div class="svgs"></div>
   <!-- This outer div matches the #app from your original App.vue, now it's HomeView's root -->
   <div class="home-view-container">
     <div class="wrapper">
@@ -145,6 +147,7 @@
     </div>
   </div>
   </div>
+
 </template>
 
 <script setup>
@@ -894,6 +897,7 @@ function handleImageError(event) {
   }
   .column-one, .column-three {
     flex-direction: row;
+    max-height: 40%;
   }
   .column-three {
     flex-direction: row; /* Side by side panels on smaller screens if desired */
